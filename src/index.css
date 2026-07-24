@@ -24,3 +24,20 @@
     @apply bg-paper text-ink;
   }
 }
+
+/* Cajas de "página" generadas por pagedjs para los documentos .docx,
+   estilizadas igual que las páginas del visor de PDF. */
+.docx-pages .pagedjs_pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.docx-pages .pagedjs_page {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid rgb(0 0 0 / 0.05);
+  box-shadow: 0 1px 2px rgba(33, 29, 43, 0.06);
+  overflow: hidden;
+}

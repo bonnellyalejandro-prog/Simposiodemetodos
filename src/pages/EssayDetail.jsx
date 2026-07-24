@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import mammoth from 'mammoth'
+import { Previewer } from 'pagedjs'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { getEssayById } from '../lib/loadEssays.js'
 import { colorForTema } from '../lib/temaColor.js'
 import NotFound from './NotFound.jsx'
+
+const DOCX_PAGE_WIDTH_PX = 816 // Letter (8.5in) a 96dpi, debe coincidir con public/docx-page.css
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -19,8 +22,10 @@ function formatFecha(fecha) {
 }
 
 function DocxViewer({ url }) {
+  const containerRef = useRef(null)
+  const pagesRef = useRef(null)
   const [status, setStatus] = useState('loading') // loading | ready | error
-  const [html, setHtml] = useState('')
+  const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
     let cancelled = false
@@ -32,10 +37,12 @@ function DocxViewer({ url }) {
         return res.arrayBuffer()
       })
       .then((buffer) => mammoth.convertToHtml({ arrayBuffer: buffer }))
-      .then((result) => {
-        if (cancelled) return
-        setHtml(result.value)
-        setStatus('ready')
+      .then(async (result) => {
+        if (cancelled || !pagesRef.current) return
+        pagesRef.current.innerHTML = ''
+        const previewer = new Previewer()
+        await previewer.preview(result.value, ['/docx-page.css'], pagesRef.current)
+        if (!cancelled) setStatus('ready')
       })
       .catch(() => {
         if (!cancelled) setStatus('error')
@@ -46,24 +53,33 @@ function DocxViewer({ url }) {
     }
   }, [url])
 
-  if (status === 'loading') {
-    return <p className="py-10 text-center text-sm text-ink-soft">Cargando documento…</p>
-  }
-
-  if (status === 'error') {
-    return (
-      <p className="py-10 text-center text-sm text-red-600">
-        No se pudo cargar la vista previa del documento. Puedes descargarlo con el botón de
-        arriba.
-      </p>
-    )
-  }
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      setZoom(Math.min(1, entries[0].contentRect.width / DOCX_PAGE_WIDTH_PX))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div
-      className="prose prose-neutral max-w-none rounded-2xl border border-black/5 bg-white p-6 shadow-[0_1px_2px_rgba(33,29,43,0.06)] prose-headings:font-display prose-headings:text-ink prose-p:text-ink/90 prose-a:text-accent sm:p-10"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div ref={containerRef}>
+      {status === 'loading' && (
+        <p className="py-10 text-center text-sm text-ink-soft">Cargando documento…</p>
+      )}
+      {status === 'error' && (
+        <p className="py-10 text-center text-sm text-red-600">
+          No se pudo cargar la vista previa del documento. Puedes descargarlo con el botón de
+          arriba.
+        </p>
+      )}
+      <div
+        ref={pagesRef}
+        style={{ zoom }}
+        className={status === 'ready' ? 'docx-pages' : 'hidden'}
+      />
+    </div>
   )
 }
 
@@ -147,8 +163,9 @@ export default function EssayDetail() {
           <h1 className="mt-3 font-display text-3xl leading-tight text-ink sm:text-4xl">
             {essay.titulo}
           </h1>
-          <p className="mt-2 text-sm text-ink-soft">
-            {essay.autor} · {formatFecha(essay.fecha)}
+          <p className="mt-2 text-base text-ink-soft">
+            <span className="font-display italic text-ink">{essay.autor}</span> ·{' '}
+            {formatFecha(essay.fecha)}
           </p>
           {essay.palabrasClave?.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">

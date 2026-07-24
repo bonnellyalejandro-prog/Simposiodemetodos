@@ -48,7 +48,7 @@ export default function EssayCard({ essay }) {
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-black/5 pt-3 text-sm">
-        <span className="font-medium text-ink">{essay.autor}</span>
+        <span className="font-display text-base italic text-ink">{essay.autor}</span>
         <span className="text-ink-soft">{formatFecha(essay.fecha)}</span>
       </div>
     </Link>
