@@ -74,11 +74,7 @@ function DocxViewer({ url }) {
           arriba.
         </p>
       )}
-      <div
-        ref={pagesRef}
-        style={{ zoom }}
-        className={status === 'ready' ? 'docx-pages' : 'hidden'}
-      />
+      <div ref={pagesRef} style={{ zoom }} className="docx-pages" />
     </div>
   )
 }

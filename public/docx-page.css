@@ -3,36 +3,40 @@
   margin: 1in;
 }
 
-body {
+/* pagedjs inyecta estas reglas en el <head> de todo el documento, no solo
+   dentro del visor — hay que anclar cada selector a .pagedjs_page para que
+   no se filtren al resto de la página (por ejemplo, al botón de descarga). */
+
+.pagedjs_page {
   font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   font-size: 11.5pt;
   line-height: 1.6;
   color: #16223e;
 }
 
-h1,
-h2,
-h3,
-h4 {
+.pagedjs_page h1,
+.pagedjs_page h2,
+.pagedjs_page h3,
+.pagedjs_page h4 {
   font-family: 'Playfair Display Variable', ui-serif, Georgia, serif;
   color: #16223e;
   line-height: 1.25;
 }
 
-p {
+.pagedjs_page p {
   margin: 0 0 0.8em;
 }
 
-a {
+.pagedjs_page a {
   color: #a3812c;
 }
 
-table {
+.pagedjs_page table {
   border-collapse: collapse;
 }
 
-td,
-th {
+.pagedjs_page td,
+.pagedjs_page th {
   border: 1px solid #d8d5cc;
   padding: 0.25em 0.5em;
 }
