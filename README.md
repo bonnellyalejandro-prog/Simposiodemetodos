@@ -20,6 +20,10 @@ Abre la URL que imprime Vite (por defecto `http://localhost:5173`).
 - `src/pages/Gallery.jsx` — grilla de tarjetas con búsqueda y filtro por tema.
 - `src/pages/EssayDetail.jsx` — vista de un ensayo: PDF paginado con `react-pdf`, Word convertido a HTML con `mammoth` y paginado con `pagedjs`, y botón de descarga del archivo original en ambos casos.
 
+## Logo del comité de derecho
+
+Coloca el archivo `public/logo-comite-derecho.png` (fondo transparente recomendado). El header lo muestra automáticamente a la izquierda del título; si el archivo no existe todavía, se ve un recuadro punteado de marcador de posición en su lugar.
+
 ## Agregar más ensayos
 
 1. Crea una carpeta en `src/essays/` por cada ensayo.
