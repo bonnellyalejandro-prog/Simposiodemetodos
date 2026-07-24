@@ -18,8 +18,7 @@ Abre la URL que imprime Vite (por defecto `http://localhost:5173`).
 - `src/essays/` — un ensayo por carpeta (`meta.json` + el `.pdf`/`.docx` original). Ver [src/essays/README.md](src/essays/README.md) para el esquema exacto.
 - `src/lib/loadEssays.js` — descubre automáticamente todas las carpetas de `src/essays/` (no hay que registrar nada a mano).
 - `src/pages/Gallery.jsx` — grilla de tarjetas con búsqueda y filtro por tema.
-- `src/pages/EssayDetail.jsx` — vista de un ensayo: PDF embebido con `<iframe>`, Word convertido a HTML con `mammoth`, y botón de descarga del archivo original en ambos casos.
-- `src/pages/About.jsx` + `src/content/about.js` — página "Sobre esta página" (`/sobre`). El texto que se muestra es la constante `ABOUT_TEXT`; edítala ahí, es texto plano (respeta saltos de línea entre párrafos, sin markdown/HTML).
+- `src/pages/EssayDetail.jsx` — vista de un ensayo: PDF paginado con `react-pdf`, Word convertido a HTML con `mammoth` y paginado con `pagedjs`, y botón de descarga del archivo original en ambos casos.
 
 ## Agregar más ensayos
 

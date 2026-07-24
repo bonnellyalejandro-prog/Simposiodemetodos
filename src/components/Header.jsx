@@ -1,22 +1,9 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-10 border-b border-black/5 bg-paper/85 backdrop-blur">
-      <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <nav className="absolute right-4 top-1/2 -translate-y-1/2 sm:right-6">
-          <NavLink
-            to="/sobre"
-            className={({ isActive }) =>
-              `text-sm font-medium transition ${
-                isActive ? 'text-accent' : 'text-ink-soft hover:text-ink'
-              }`
-            }
-          >
-            Sobre esta página
-          </NavLink>
-        </nav>
-
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <Link to="/" className="block text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
             Simposio de Métodos de Investigación
