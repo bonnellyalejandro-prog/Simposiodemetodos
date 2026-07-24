@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import mammoth from 'mammoth'
+import { Document, Page, pdfjs } from 'react-pdf'
 import { getEssayById } from '../lib/loadEssays.js'
 import { colorForTema } from '../lib/temaColor.js'
 import NotFound from './NotFound.jsx'
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString()
 
 function formatFecha(fecha) {
   if (!fecha) return ''
@@ -61,13 +67,58 @@ function DocxViewer({ url }) {
   )
 }
 
-function PdfViewer({ url, titulo }) {
+function PdfViewer({ url }) {
+  const containerRef = useRef(null)
+  const [width, setWidth] = useState(0)
+  const [numPages, setNumPages] = useState(null)
+  const [status, setStatus] = useState('loading') // loading | ready | error
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      setWidth(entries[0].contentRect.width)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <iframe
-      src={url}
-      title={titulo}
-      className="h-[85vh] w-full rounded-2xl border border-black/5 bg-white shadow-[0_1px_2px_rgba(33,29,43,0.06)]"
-    />
+    <div ref={containerRef}>
+      {status === 'error' && (
+        <p className="py-10 text-center text-sm text-red-600">
+          No se pudo cargar la vista previa del documento. Puedes descargarlo con el botón de
+          arriba.
+        </p>
+      )}
+      {status === 'loading' && (
+        <p className="py-10 text-center text-sm text-ink-soft">Cargando documento…</p>
+      )}
+      <Document
+        file={url}
+        onLoadSuccess={({ numPages: total }) => {
+          setNumPages(total)
+          setStatus('ready')
+        }}
+        onLoadError={() => setStatus('error')}
+        loading={null}
+        error={null}
+        className={status === 'ready' ? 'flex flex-col gap-4' : 'hidden'}
+      >
+        {width > 0 &&
+          Array.from({ length: numPages ?? 0 }, (_, i) => (
+            <Page
+              key={i}
+              pageNumber={i + 1}
+              width={width}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+              className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-[0_1px_2px_rgba(33,29,43,0.06)] [&_canvas]:!h-auto [&_canvas]:!w-full"
+              loading={null}
+            />
+          ))}
+      </Document>
+    </div>
   )
 }
 
@@ -135,7 +186,7 @@ export default function EssayDetail() {
           </p>
         )}
         {essay.archivoUrl && essay.tipo === 'pdf' && (
-          <PdfViewer url={essay.archivoUrl} titulo={essay.titulo} />
+          <PdfViewer url={essay.archivoUrl} />
         )}
         {essay.archivoUrl && essay.tipo === 'docx' && <DocxViewer url={essay.archivoUrl} />}
       </div>
