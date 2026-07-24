@@ -7,7 +7,55 @@ import { getEssayById } from '../lib/loadEssays.js'
 import { colorForTema } from '../lib/temaColor.js'
 import NotFound from './NotFound.jsx'
 
-const DOCX_PAGE_WIDTH_PX = 816 // Letter (8.5in) a 96dpi, debe coincidir con public/docx-page.css
+const DOCX_DESIGN_WIDTH_PX = 816 // Letter (8.5in) a 96dpi: ancho de referencia para escalar tipografía/márgenes
+
+function buildDocxPageCss(width) {
+  const scale = width / DOCX_DESIGN_WIDTH_PX
+  const height = Math.round(width * (11 / 8.5))
+  const margin = Math.round(96 * scale)
+  const fontSize = (11.5 * scale).toFixed(2)
+
+  return `
+@page {
+  size: ${width}px ${height}px;
+  margin: ${margin}px;
+}
+
+.pagedjs_page {
+  font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  font-size: ${fontSize}px;
+  line-height: 1.6;
+  color: #16223e;
+}
+
+.pagedjs_page h1,
+.pagedjs_page h2,
+.pagedjs_page h3,
+.pagedjs_page h4 {
+  font-family: 'Playfair Display Variable', ui-serif, Georgia, serif;
+  color: #16223e;
+  line-height: 1.25;
+}
+
+.pagedjs_page p {
+  margin: 0 0 0.8em;
+}
+
+.pagedjs_page a {
+  color: #a3812c;
+}
+
+.pagedjs_page table {
+  border-collapse: collapse;
+}
+
+.pagedjs_page td,
+.pagedjs_page th {
+  border: 1px solid #d8d5cc;
+  padding: 0.25em 0.5em;
+}
+`
+}
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -24,10 +72,28 @@ function formatFecha(fecha) {
 function DocxViewer({ url }) {
   const containerRef = useRef(null)
   const pagesRef = useRef(null)
-  const [status, setStatus] = useState('loading') // loading | ready | error
-  const [zoom, setZoom] = useState(1)
+  const [status, setStatus] = useState('loading') // loading | error | ready
+  const [width, setWidth] = useState(0)
+
+  // Medimos el ancho real del contenedor una sola vez: repaginar en cada
+  // resize sería costoso, y el ancho no cambia salvo por algo como un giro
+  // de pantalla en mobile.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width
+      if (w > 0) {
+        setWidth(w)
+        observer.disconnect()
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
+    if (!width) return
     let cancelled = false
     setStatus('loading')
 
@@ -40,8 +106,11 @@ function DocxViewer({ url }) {
       .then(async (result) => {
         if (cancelled || !pagesRef.current) return
         pagesRef.current.innerHTML = ''
+        const css = buildDocxPageCss(width)
+        const cssUrl = URL.createObjectURL(new Blob([css], { type: 'text/css' }))
         const previewer = new Previewer()
-        await previewer.preview(result.value, ['/docx-page.css'], pagesRef.current)
+        await previewer.preview(result.value, [cssUrl], pagesRef.current)
+        URL.revokeObjectURL(cssUrl)
         if (!cancelled) setStatus('ready')
       })
       .catch(() => {
@@ -51,17 +120,7 @@ function DocxViewer({ url }) {
     return () => {
       cancelled = true
     }
-  }, [url])
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const observer = new ResizeObserver((entries) => {
-      setZoom(Math.min(1, entries[0].contentRect.width / DOCX_PAGE_WIDTH_PX))
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+  }, [url, width])
 
   return (
     <div ref={containerRef}>
@@ -74,7 +133,7 @@ function DocxViewer({ url }) {
           arriba.
         </p>
       )}
-      <div ref={pagesRef} style={{ zoom }} className="docx-pages" />
+      <div ref={pagesRef} className="docx-pages" />
     </div>
   )
 }
